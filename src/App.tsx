@@ -39,14 +39,26 @@ export default function App() {
     getPokemonData(5);
   }, []);
 
-  // Function to add card to selected cards list, check if there is already card inside
+  // Function to shuffle pokemon list using Fisher-Yates Shuffle
+  function shufflePokemon(): void {
+    const shuffle = [...pokemonData];
+    for (let i = pokemonData.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffle[i], shuffle[j]] = [shuffle[j], shuffle[i]];
+    }
+    setPokemonData(shuffle);
+  }
 
-  // Function to shuffle cards
+  // Function to add pokemon to selected pokemon list and shuffle
+  function addPokemonToList(pokemon: string): void {
+    setSelectedPokemon([...selectedPokemon, pokemon]);
+    shufflePokemon();
+  }
 
   return (
     <div id="appContainer">
       <Scoreboard />
-      <GameDisplay pokemonData={pokemonData} />
+      <GameDisplay pokemonData={pokemonData} handleClick={addPokemonToList} />
     </div>
   );
 }
