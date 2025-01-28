@@ -12,6 +12,7 @@ export default function App() {
   const [pokemonData, setPokemonData] = useState<PokemonData>([]);
   const [selectedPokemon, setSelectedPokemon] = useState<string[]>([]);
   const [loadingAPI, setLoadingAPI] = useState(true);
+  const [difficulty, setDifficulty] = useState<number>(5);
 
   // Calculate all derived state
   // Check for duplicates in gameLost and reset game if game lost
@@ -49,8 +50,8 @@ export default function App() {
       setSelectedPokemon([]);
       setLoadingAPI(false);
     }
-    getPokemonData(5);
-  }, [gameWon]);
+    getPokemonData(difficulty);
+  }, [gameWon, difficulty]);
 
   // Function to shuffle pokemon list using Fisher-Yates Shuffle
   function shufflePokemon(): void {
@@ -70,7 +71,30 @@ export default function App() {
 
   return (
     <div id="appContainer">
-      <Scoreboard score={currScore} maxScore={5} />
+      <div className="buttonContainers">
+        <button
+          onClick={() => {
+            setDifficulty(5);
+          }}
+        >
+          Easy
+        </button>
+        <button
+          onClick={() => {
+            setDifficulty(10);
+          }}
+        >
+          Medium
+        </button>
+        <button
+          onClick={() => {
+            setDifficulty(15);
+          }}
+        >
+          Hard
+        </button>
+      </div>
+      <Scoreboard score={currScore} maxScore={difficulty} />
       <GameDisplay pokemonData={pokemonData} handleClick={addPokemonToList} />
     </div>
   );
