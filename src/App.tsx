@@ -10,12 +10,24 @@ type PokemonData = {
 export default function App() {
   // State for pokemon data & selected cards
   const [pokemonData, setPokemonData] = useState<PokemonData>([]);
-  const [selectedPokemon, setSelectedPokemon] = useState(['']);
+  const [selectedPokemon, setSelectedPokemon] = useState<string[]>([]);
   const [loadingAPI, setLoadingAPI] = useState(true);
+
+  // Calculate all derived state
+  // Check for duplicates in gameLost and reset game if game lost
+  const gameLost =
+    Array.from(new Set(selectedPokemon)).length !== selectedPokemon.length;
+  if (gameLost) {
+    setSelectedPokemon([]);
+    shufflePokemon();
+  }
+  const currScore = selectedPokemon.length;
+  const gameWon = currScore === pokemonData.length && !loadingAPI;
 
   // Effect for fetching random pokemon data from API upon init and reload
   useEffect(() => {
     async function getPokemonData(length: number): Promise<void> {
+      setLoadingAPI(true);
       // Generate a list of random ids
       const randomIds: number[] = [];
       for (let i = 0; i < length; i++) {
@@ -34,10 +46,11 @@ export default function App() {
         })
       );
       setPokemonData(pokemonData);
+      setSelectedPokemon([]);
       setLoadingAPI(false);
     }
     getPokemonData(5);
-  }, []);
+  }, [gameWon]);
 
   // Function to shuffle pokemon list using Fisher-Yates Shuffle
   function shufflePokemon(): void {
@@ -57,7 +70,7 @@ export default function App() {
 
   return (
     <div id="appContainer">
-      <Scoreboard />
+      <Scoreboard score={currScore} maxScore={5} />
       <GameDisplay pokemonData={pokemonData} handleClick={addPokemonToList} />
     </div>
   );
