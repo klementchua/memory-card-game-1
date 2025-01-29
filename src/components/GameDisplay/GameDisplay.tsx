@@ -2,8 +2,8 @@ import styles from './gameDisplay.module.css';
 
 type GameDisplayProps = {
   pokemonData: {
-    pokemonName: '';
-    spriteUrl: '';
+    pokemonName: string;
+    spriteUrl: string;
   }[];
   handleClick: (pokemon: string) => void;
 };

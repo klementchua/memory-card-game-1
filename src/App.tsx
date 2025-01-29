@@ -1,32 +1,32 @@
 import { useEffect, useState } from 'react';
+import TitlePage from './components/TitlePage/TitlePage';
 import Scoreboard from './components/Scoreboard/Scoreboard';
 import GameDisplay from './components/GameDisplay/GameDisplay';
+import LosePage from './components/LosePage';
 
 type PokemonData = {
-  pokemonName: '';
-  spriteUrl: '';
+  pokemonName: string;
+  spriteUrl: string;
 }[];
 
 export default function App() {
-  // State for pokemon data & selected cards
+  // State initialisation
   const [pokemonData, setPokemonData] = useState<PokemonData>([]);
   const [selectedPokemon, setSelectedPokemon] = useState<string[]>([]);
   const [loadingAPI, setLoadingAPI] = useState(true);
   const [difficulty, setDifficulty] = useState<number>(5);
+  const [displayTitlePage, setDisplayTitlePage] = useState(true);
+  const [displayGame, setDisplayGame] = useState(false);
+  const [gameLost, setGameLost] = useState(false);
 
   // Calculate all derived state
-  // Check for duplicates in gameLost and reset game if game lost
-  const gameLost =
-    Array.from(new Set(selectedPokemon)).length !== selectedPokemon.length;
-  if (gameLost) {
-    setSelectedPokemon([]);
-    shufflePokemon();
-  }
   const currScore = selectedPokemon.length;
   const gameWon = currScore === pokemonData.length && !loadingAPI;
 
   // Effect for fetching random pokemon data from API upon init and reload
   useEffect(() => {
+    setSelectedPokemon([]);
+
     async function getPokemonData(length: number): Promise<void> {
       setLoadingAPI(true);
       // Generate a list of random ids
@@ -47,7 +47,6 @@ export default function App() {
         })
       );
       setPokemonData(pokemonData);
-      setSelectedPokemon([]);
       setLoadingAPI(false);
     }
     getPokemonData(difficulty);
@@ -65,37 +64,33 @@ export default function App() {
 
   // Function to add pokemon to selected pokemon list and shuffle
   function addPokemonToList(pokemon: string): void {
+    if (selectedPokemon.includes(pokemon)) {
+      setGameLost(true);
+      setDisplayGame(false);
+      setSelectedPokemon([]);
+      return;
+    }
+
     setSelectedPokemon([...selectedPokemon, pokemon]);
     shufflePokemon();
   }
 
   return (
     <div id="appContainer">
-      <div className="buttonContainers">
-        <button
-          onClick={() => {
-            setDifficulty(5);
-          }}
-        >
-          Easy
-        </button>
-        <button
-          onClick={() => {
-            setDifficulty(10);
-          }}
-        >
-          Medium
-        </button>
-        <button
-          onClick={() => {
-            setDifficulty(15);
-          }}
-        >
-          Hard
-        </button>
+      {displayTitlePage && (
+        <TitlePage
+          setDifficulty={setDifficulty}
+          setDisplayTitlePage={setDisplayTitlePage}
+          setDisplayGame={setDisplayGame}
+        />
+      )}
+      <div style={{ display: displayGame ? 'block' : 'none' }}>
+        <Scoreboard score={currScore} maxScore={difficulty} />
+        <GameDisplay pokemonData={pokemonData} handleClick={addPokemonToList} />
       </div>
-      <Scoreboard score={currScore} maxScore={difficulty} />
-      <GameDisplay pokemonData={pokemonData} handleClick={addPokemonToList} />
+      {gameLost && (
+        <LosePage setGameLost={setGameLost} setDisplayGame={setDisplayGame} />
+      )}
     </div>
   );
 }
