@@ -1,16 +1,14 @@
-import { useState } from 'react';
-
 type ScoreboardProps = {
   score: number;
+  highScore: number;
   maxScore: number;
 };
 
-export default function Scoreboard({ score, maxScore }: ScoreboardProps) {
-  const [highScore, setHighScore] = useState(0);
-  if (score > highScore) {
-    setHighScore(score);
-  }
-
+export default function Scoreboard({
+  score,
+  highScore,
+  maxScore,
+}: ScoreboardProps) {
   return (
     <div>
       <span>

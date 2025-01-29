@@ -3,11 +3,18 @@ import TitlePage from './components/TitlePage/TitlePage';
 import Scoreboard from './components/Scoreboard/Scoreboard';
 import GameDisplay from './components/GameDisplay/GameDisplay';
 import LosePage from './components/LosePage';
+import WinPage from './components/WinPage';
 
 type PokemonData = {
   pokemonName: string;
   spriteUrl: string;
 }[];
+
+type HighScore = {
+  5: number;
+  10: number;
+  15: number;
+};
 
 export default function App() {
   // State initialisation
@@ -18,15 +25,27 @@ export default function App() {
   const [displayTitlePage, setDisplayTitlePage] = useState(true);
   const [displayGame, setDisplayGame] = useState(false);
   const [gameLost, setGameLost] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
+  const [highScore, setHighScore] = useState<HighScore>({ 5: 0, 10: 0, 15: 0 });
 
-  // Calculate all derived state
   const currScore = selectedPokemon.length;
-  const gameWon = currScore === pokemonData.length && !loadingAPI;
+
+  // Handle scorekeeping
+  if (currScore > highScore[difficulty as keyof HighScore]) {
+    setHighScore({ ...highScore, [difficulty as keyof HighScore]: currScore });
+  }
+
+  const gameWonRenderCalc = currScore === pokemonData.length && !loadingAPI;
+  // Game win side effects
+  useEffect(() => {
+    if (gameWonRenderCalc) {
+      setDisplayGame(false);
+      setGameWon(true);
+    }
+  }, [gameWonRenderCalc]);
 
   // Effect for fetching random pokemon data from API upon init and reload
   useEffect(() => {
-    setSelectedPokemon([]);
-
     async function getPokemonData(length: number): Promise<void> {
       setLoadingAPI(true);
       // Generate a list of random ids
@@ -49,8 +68,12 @@ export default function App() {
       setPokemonData(pokemonData);
       setLoadingAPI(false);
     }
-    getPokemonData(difficulty);
-  }, [gameWon, difficulty]);
+
+    if (!gameWon) {
+      setSelectedPokemon([]);
+      getPokemonData(difficulty);
+    }
+  }, [difficulty, gameWon]);
 
   // Function to shuffle pokemon list using Fisher-Yates Shuffle
   function shufflePokemon(): void {
@@ -64,6 +87,7 @@ export default function App() {
 
   // Function to add pokemon to selected pokemon list and shuffle
   function addPokemonToList(pokemon: string): void {
+    // Game loss logic
     if (selectedPokemon.includes(pokemon)) {
       setGameLost(true);
       setDisplayGame(false);
@@ -84,12 +108,29 @@ export default function App() {
           setDisplayGame={setDisplayGame}
         />
       )}
-      <div style={{ display: displayGame ? 'block' : 'none' }}>
-        <Scoreboard score={currScore} maxScore={difficulty} />
-        <GameDisplay pokemonData={pokemonData} handleClick={addPokemonToList} />
-      </div>
+      {!loadingAPI ? (
+        <div style={{ display: displayGame ? 'block' : 'none' }}>
+          <Scoreboard
+            score={currScore}
+            maxScore={difficulty}
+            highScore={highScore[difficulty as keyof HighScore]}
+          />
+          <GameDisplay
+            pokemonData={pokemonData}
+            handleClick={addPokemonToList}
+          />
+        </div>
+      ) : (
+        displayGame && <h1>Loading...</h1>
+      )}
       {gameLost && (
         <LosePage setGameLost={setGameLost} setDisplayGame={setDisplayGame} />
+      )}
+      {gameWon && (
+        <WinPage
+          setGameWon={setGameWon}
+          setDisplayTitlePage={setDisplayTitlePage}
+        />
       )}
     </div>
   );
